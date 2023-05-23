@@ -13,8 +13,10 @@ from sharepoint import SharePoint
 from supporting_files import get_supporting_files
 from OCR import ocr_image
 from datetime import datetime
+from azure.cognitiveservices.vision.computervision.models import ComputerVisionOcrErrorException
 
-c1 = extract_from_text.create_categoriser()
+
+classifiers = extract_from_text.create_classifiers()
 ingredients_set = extract_from_text.get_ingredients_set()
 lifestyles_set = extract_from_text.get_lifestyles_set()
 AUTHENTICATION_ROOT =r'C:\\Users\\Clamfighter\\Documents\\GitHub\\00-Authentication\\Impact-Score-Extraction'
@@ -82,8 +84,11 @@ for index, row in pd_PII.iterrows(): #for each product in the product informatio
         with open('tmp/tmp.jpg', 'wb') as f:
             f.write(image)
             f.close()
-        image_file = open('tmp/tmp.jpg', "rb")
-        imagetext=ocr_image(image_file,OCR_SUBSCRIPTION_KEY,OCR_ENDPOINT) 
+        try:
+            image_file = open('tmp/tmp.jpg', "rb")
+            imagetext=ocr_image(image_file,OCR_SUBSCRIPTION_KEY,OCR_ENDPOINT) 
+        except ComputerVisionOcrErrorException as e:
+            print('Exception: ',e)
         product_text=product_text+' '+imagetext 
     print(product_text)
     #product_text = exampletext
@@ -92,10 +97,17 @@ for index, row in pd_PII.iterrows(): #for each product in the product informatio
     '''
     Now we have the text for the product, we can extract information from it
     '''
-    pl1 = extract_from_text.get_pl1(product_text,c1)
+    pl1 = classifiers['pl1'].classify(product_text)
     print('PL1: ',pl1)
 
-    PL = [pl1,'undefined','undefined']
+    if pl1 == 'Household_&_Garden':
+        pl2='undefined'
+    else:
+        pl2 = classifiers[pl1].classify(product_text)
+
+    PL = [pl1,pl2,'undefined']
+
+    print(PL)
 
     if ingredients =='':
         ingredients = extract_from_text.get_ingredients(product_text.lower(),ingredients_set)
