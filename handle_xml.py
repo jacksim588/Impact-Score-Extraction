@@ -12,7 +12,7 @@ def create_xml(GTIN, impactScoreID,companyName,productName,product_text,PL,lifes
     # Add child elements to the Identity element
 
     product_codes = ET.SubElement(identity, "ProductCodes")
-    code_gtin = ET.SubElement(product_codes, "Code", Scheme=GTIN)
+    code_gtin = ET.SubElement(product_codes, "Code", Scheme='GTIN')
     code_gtin.text = GTIN
     code_brandbank_pvid = ET.SubElement(product_codes, "Code", Scheme="IMPACTSCORE:PVID")
     code_brandbank_pvid.text = impactScoreID
